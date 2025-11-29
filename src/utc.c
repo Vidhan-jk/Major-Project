@@ -5,26 +5,25 @@
 /*
  * utc.c
  *
- * Contains the implementation for:
- *  ✔ Fetching system UTC time
- *  ✔ Converting Local Time (IST) to UTC
- *  ✔ Converting UTC to Local Time (IST)
- *  ✔ Validating time input
+ * Implements:
+ *  - showCurrentUTC(): prints current system time in UTC.
+ *  - convertLocalToUTC(): converts IST -> UTC by subtracting 5:30.
+ *  - convertUTCToLocal(): converts UTC -> IST by adding 5:30.
+ *  - validate_time(): checks bounds of hh:mm:ss.
  *
- * NOTE:
- *     IST = UTC + 5 hours 30 minutes
- *     So for conversion we use:
- *         UTC = IST - 5:30
- *         IST = UTC + 5:30
+ * Conversions use total seconds and wrap around 24*3600 to handle day boundaries.
  */
 
-// Function to show current system time in UTC
-void showCurrentUTC() {
-    time_t now;               // Holds current system time
-    struct tm *utc_time;      // Struct to hold broken-down UTC time
+/* Print current UTC time in HH:MM:SS format. */
+void showCurrentUTC(void) {
+    time_t now;
+    struct tm *utc_time;
 
-    time(&now);               // Get current time
-    utc_time = gmtime(&now);  // Convert to UTC
+    /* Get current time (seconds since epoch) */
+    time(&now);
+
+    /* Convert to UTC broken-down time */
+    utc_time = gmtime(&now);
 
     if (utc_time != NULL) {
         printf("\nCurrent UTC Time: %02d:%02d:%02d\n",
@@ -32,51 +31,51 @@ void showCurrentUTC() {
                utc_time->tm_min,
                utc_time->tm_sec);
     } else {
-        printf("Error retrieving UTC time!\n");
+        /* Very rare; handle gracefully */
+        fprintf(stderr, "Error: unable to obtain UTC time.\n");
     }
 }
 
-// Convert Local Time (IST) to UTC
+/* Convert Local Time (IST) to UTC.
+ * IST = UTC + 5:30  =>  UTC = IST - 5:30
+ */
 void convertLocalToUTC(int h, int m, int s, int *uh, int *um, int *us) {
     int total_seconds = h * 3600 + m * 60 + s;
-
-    // IST offset from UTC = +5 hours 30 minutes
-    const int offset_seconds = 5 * 3600 + 30 * 60;
+    const int offset_seconds = 5 * 3600 + 30 * 60; /* 19800 seconds */
 
     total_seconds -= offset_seconds;
 
-    // If negative, wrap around 24 hours
+    /* Wrap to previous day if negative */
     if (total_seconds < 0)
         total_seconds += 24 * 3600;
 
-    // Store result in output pointers
-    *uh = (total_seconds / 3600) % 24;
-    *um = (total_seconds / 60) % 60;
-    *us = total_seconds % 60;
+    if (uh) *uh = (total_seconds / 3600) % 24;
+    if (um) *um = (total_seconds / 60) % 60;
+    if (us) *us = total_seconds % 60;
 }
 
-// Convert UTC to Local Time (IST)
+/* Convert UTC to Local Time (IST).
+ * IST = UTC + 5:30
+ */
 void convertUTCToLocal(int h, int m, int s, int *lh, int *lm, int *ls) {
     int total_seconds = h * 3600 + m * 60 + s;
-
-    // IST = UTC + 5:30
     const int offset_seconds = 5 * 3600 + 30 * 60;
 
     total_seconds += offset_seconds;
 
-    // Wrap around after 24 hours
+    /* Wrap to next day if >= 24h */
     if (total_seconds >= 24 * 3600)
         total_seconds -= 24 * 3600;
 
-    *lh = (total_seconds / 3600) % 24;
-    *lm = (total_seconds / 60) % 60;
-    *ls = total_seconds % 60;
+    if (lh) *lh = (total_seconds / 3600) % 24;
+    if (lm) *lm = (total_seconds / 60) % 60;
+    if (ls) *ls = total_seconds % 60;
 }
 
-// Validate time input
+/* Validate time triple: hours 0..23, minutes 0..59, seconds 0..59 */
 int validate_time(int h, int m, int s) {
-    if (h < 0 || h >= 24) return 0;   // Hour must be 0–23
-    if (m < 0 || m >= 60) return 0;   // Minute must be 0–59
-    if (s < 0 || s >= 60) return 0;   // Second must be 0–59
-    return 1;                         // Time is valid
+    if (h < 0 || h >= 24) return 0;
+    if (m < 0 || m >= 60) return 0;
+    if (s < 0 || s >= 60) return 0;
+    return 1;
 }
