@@ -1,13 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "utc.h"   // Header file containing function declarations
+#include "utc.h"   // Include header file for UTC function declarations
+
+/*
+ * main.c
+ * 
+ * This file contains the menu-driven interface for the Universal Time Clock project.
+ * It interacts with the user, accepts input, and calls the appropriate functions
+ * from utc.c to perform time conversions or display the system's current UTC time.
+ */
 
 int main() {
-    int choice;
-    int hour, minute, second;
-    int out_h, out_m, out_s;   // Variables for converted output time
+    int choice;                    // Stores user menu choice
+    int hour, minute, second;      // Stores input time from user
+    int out_h, out_m, out_s;       // Stores converted output time
 
-    while (1) {  // Infinite loop for continuous menu display
+    while (1) {  // Infinite loop so the menu keeps showing until user exits
         printf("\n======= UNIVERSAL TIME CLOCK (UTC) =======\n");
         printf("1. Show Current System Time in UTC\n");
         printf("2. Convert Local Time (IST) to UTC\n");
@@ -15,52 +23,57 @@ int main() {
         printf("4. Exit\n");
         printf("-----------------------------------------\n");
 
-        // Taking user choice
         printf("Enter your choice: ");
         scanf("%d", &choice);
 
-        // Checking user choice using switch-case
         switch (choice) {
 
+            // Option 1: Display system time in UTC
             case 1:
-                // Function to display current system time in UTC
                 showCurrentUTC();
                 break;
 
+            // Option 2: Convert Local IST to UTC
             case 2:
-                // Taking Local Time input from user
                 printf("Enter Local Time (HH MM SS): ");
                 scanf("%d %d %d", &hour, &minute, &second);
 
-                // Converting Local Time (IST) to UTC 
+                // Validate the time input
+                if (!validate_time(hour, minute, second)) {
+                    printf("Invalid time format! Please enter a valid HH MM SS.\n");
+                    break;
+                }
+
                 convertLocalToUTC(hour, minute, second, &out_h, &out_m, &out_s);
 
-                // Displaying converted time
                 printf("UTC Time: %02d:%02d:%02d\n", out_h, out_m, out_s);
                 break;
 
+            // Option 3: Convert UTC to IST
             case 3:
-                // Taking UTC input from user
                 printf("Enter UTC Time (HH MM SS): ");
                 scanf("%d %d %d", &hour, &minute, &second);
 
-                // Converting UTC to Local Time (IST)
+                // Validate the time input
+                if (!validate_time(hour, minute, second)) {
+                    printf("Invalid time format! Please enter a valid HH MM SS.\n");
+                    break;
+                }
+
                 convertUTCToLocal(hour, minute, second, &out_h, &out_m, &out_s);
 
-                // Displaying converted time
                 printf("Local Time (IST): %02d:%02d:%02d\n", out_h, out_m, out_s);
                 break;
 
+            // Option 4: Exit program
             case 4:
-                // Exit the program
                 printf("Exiting program...\n");
                 exit(0);
 
             default:
-                // Handling invalid menu input
                 printf("Invalid option! Please enter 1–4.\n");
         }
     }
 
-    return 0;   // Program exit point
+    return 0;   // Program ends (although logically never reached due to infinite loop)
 }
